@@ -57,21 +57,11 @@ function checkScamAdvisorCurrent()
 	
 }
 
-function checkScamAdvisorLink(info, tab)
-{
-	alert(info.mediaType);
-	var searchString = "http://www.scamadviser.com/check-website/";
-	alert(info.linkURL);
-	var siteToCheck = convertURLToSearchableString(info.linkURL);
-	var finalString = searchString.concat(siteToCheck);
-	
-	
-	
-}
+
 
 function searchTinEye(info, tab)
 {
-	alert(info.srcURL);
+	alert(info.menuItemId);
 	chrome.tabs.create({"url":"https://www.tineye.com/","active":true}, function(tabs){
 	chrome.tabs.executeScript({"file":"TinyEyeSearch.js"});
 	});
@@ -80,18 +70,23 @@ function searchTinEye(info, tab)
 var title = "Hi-Brite Actions";
 var contexts = ["page","selection","link","image","video","audio"];
 var currentPageParent = chrome.contextMenus.create({"title": "Current Page", "contexts":[contexts[0]]});
-var selectionParent = chrome.contextMenus.create({"title": "Google this","contexts":[contexts[1]], "onclick": throwHiBriteAlert});
+var selectionParent = chrome.contextMenus.create({"title": "Google this","contexts":[contexts[1]]});
 
 var imageParent = chrome.contextMenus.create({"title": "Reverse Image Search","contexts":[contexts[3]], "onclick": searchTinEye});
 var linkParent = chrome.contextMenus.create({"title": "Linked page info","contexts":[contexts[2]], "onclick": throwHiBriteAlert});
 var currentPageChild1 = chrome.contextMenus.create({"title": "Current Page Info","parentId":currentPageParent, "contexts":[contexts[0]],"onclick":openInfoPage});
 var currentPageChildScamAdvisor = chrome.contextMenus.create({"title": "Is this site legit?","parentId":currentPageParent, "contexts":[contexts[0]],"onclick":checkScamAdvisorCurrent});
 
-var linkSafetyChild = chrome.contextMenus.create({"title":"Is this link safe?","parentId":linkParent,"contexts":[contexts[2]]});
+var linkSafetyChild = chrome.contextMenus.create({"title":"Is this link safe?","parentId":linkParent,"contexts":[contexts[2]], "onclick":checkScamAdvisorLink});
 
-chrome.contextMenus.onClicked.addListener(function(info, tab){
+function checkScamAdvisorLink(info, tab)
+{
+	alert(info.linkURL);
+	var searchString = "http://www.scamadviser.com/check-website/";
 	
-
-checkScamAdvisorLink(info, tab);
-});
-alert("stilll");
+	//var siteToCheck = convertURLToSearchableString(info.linkURL);
+	//var finalString = searchString.concat(siteToCheck);
+	
+	
+	
+}
