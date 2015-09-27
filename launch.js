@@ -9,11 +9,9 @@ function openInfoPage()
 }
 
 
-function convertURLToSearchableString(URL)
+function removeLeadingGarbageFromURL(URL)
 {	
-	
 	var httpIndex = URL.indexOf("http");
-	
 	
 	if(httpIndex >= 0)
 	{	
@@ -31,70 +29,127 @@ function convertURLToSearchableString(URL)
 		
 		else
 		{
-			return URL.substring(URL.indexOf("https://")+7);
+			return URL.substring(URL.indexOf("http://")+7);
 		}
 		
 	}
 	
 	else	
 	{	
-	alert("This URL is likely invalid");
+		alert("This URL is likely invalid");
 	}
 	return(URL);
 	
 }
 
+function removeSubDirectoriesFromURL(URL)
+{
+	var wwwIndex = URL.indexOf("www.");
+	var httpIndex = URL.indexOf("http://");
+	var httpsIndex = URL.indexOf("https://");
+	
+	if(wwwIndex >= 0)
+		var slashIndex = URL.indexOf("/",wwwIndex);
+	else if(httpIndex >=0)
+		var slashIndex = URL.indexOf("/", httpIndex + 7);
+	else if(httpsIndex >=0 )
+		var slashIndex = URL.indexOf("/", httpsIndex + 8);
+	else
+	{
+		alert("This url may be invalid. Please contact us at splatterapps@gmail.com if you belive this to be in error");
+		return null;
+	}
+	
+	var truncatedURL = URL.substring(0, slashIndex);
+	return truncatedURL;
+}
+
+function convertFullURLToBaseSite(URL)
+{
+	var baseURL = removeSubDirectoriesFromURL(URL);
+	
+	baseURL = removeLeadingGarbageFromURL(baseURL);
+	return baseURL;
+}
+
+
+
+
+var title = "Hi-Brite Actions";
+var contexts = ["page","selection","link","image","video","audio"];
+
+//Parent Items
+var currentPageParent = chrome.contextMenus.create({"title": "Current Page", "contexts":["selection"]});
+var selectionParent = chrome.contextMenus.create({"title": "Google this","contexts":["selection"]});
+var imageParent = chrome.contextMenus.create({"title": "Reverse Image Search","contexts":["image"]});
+var linkParent = chrome.contextMenus.create({"title": "Link Info","contexts":["link"]});
+
+
+
+
+var currentPageChildScamAdvisor = chrome.contextMenus.create({"title": "Is this site legit?","parentId":currentPageParent, "contexts":[contexts[0]],"onclick":checkScamAdvisorCurrent});
+
+var reverseImageSearch = chrome.contextMenus.create({"title": "Reverse Image Search on TinEye", "parentId":imageParent, "contexts": ["image"], "onclick":searchTinEye});
+	
+	
+//Context items for links
+var siteTrafficReport = chrome.contextMenus.create({"title": "View Site Traffic", "parentId": linkParent, "contexts":["link"], "onclick": checkCompeteLink});
+var scamAdvisorReport = chrome.contextMenus.create({"title":"Is this link safe?","parentId":linkParent,"contexts":["link"], "onclick": checkScamAdvisorLink});
+var downForEveryoneReport = chrome.contextMenus.create({"title":"Is This Site Down?", "parentId":linkParent,"contexts":["link"],"onclick":checkDownForEveryOneLink});
+var semRushReport = chrome.contextMenus.create({"title": "Advanced Info", "parentId":linkParent,"contexts":["link"],"onclick":checkSemRushLink});
+
+function checkSemRushLink(info, tab)
+{
+	var baseSiteURL = "http://www.semrush.com/info/";
+	var siteToCheck = convertFullURLToBaseSite(info.linkUrl);
+	var searchString = baseSiteURL.concat(siteToCheck);
+	chrome.tabs.create({"url":searchString, "active": true});
+}
+
+function checkCompeteLink(info, tab)
+{
+	var baseSiteURL = "https://siteanalytics.compete.com/";
+	var siteToCheck = convertFullURLToBaseSite(info.linkUrl);
+	var searchString = baseSiteURL.concat(siteToCheck);
+	chrome.tabs.create({"url":searchString, "active": true});
+}
+
+function checkScamAdvisorLink(info, tab)
+{
+	var baseSiteURL = "http://www.scamadviser.com/check-website/";
+	var siteToCheck = convertFullURLToBaseSite(info.linkUrl);
+	var searchString = baseSiteURL.concat(siteToCheck);
+	
+	chrome.tabs.create({"url":searchString, "active": true});
+}
+function checkDownForEveryOneLink(info, tab)
+{
+	var baseSiteURL = "http://downforeveryoneorjustme.com/";
+	var siteToCheck = convertFullURLToBaseSite(info.linkUrl);
+	var searchString = baseSiteURL.concat(siteToCheck);
+	
+	chrome.tabs.create({"url": searchString, "active": true});
+}
 function checkScamAdvisorCurrent()
 {
 	var searchString = "http://www.scamadviser.com/check-website/";
 	
 	chrome.tabs.query({'active': true}, function(tabs) {
 	var currentURL=tabs[0].url;
-	var siteToCheck = convertURLToSearchableString(currentURL);
+	
+	var siteToCheck = removeLeadingGarbageFromURL(currentURL);
 	var finalString = searchString.concat(siteToCheck);
 	chrome.tabs.create({"url":finalString,"active":true});
 });
 	
 }
 
-
-
 function searchTinEye(info, tab)
 {
-	alert(info.menuItemId);
+	alert("A");
+	var linkToSend = info.srcUrl;
+	alert(linkToSend);
 	chrome.tabs.create({"url":"https://www.tineye.com/","active":true}, function(tabs){
 	chrome.tabs.executeScript({"file":"TinyEyeSearch.js"});
 	});
-}
-
-var title = "Hi-Brite Actions";
-var contexts = ["page","selection","link","image","video","audio"];
-var currentPageParent = chrome.contextMenus.create({"title": "Current Page", "contexts":[contexts[0]]});
-var selectionParent = chrome.contextMenus.create({"title": "Google this","contexts":[contexts[1]]});
-
-var imageParent = chrome.contextMenus.create({"title": "Reverse Image Search","contexts":[contexts[3]], "onclick": searchTinEye});
-var linkParent = chrome.contextMenus.create({"title": "Linked page info","contexts":[contexts[2]], "onclick": throwHiBriteAlert});
-var currentPageChild1 = chrome.contextMenus.create({"title": "Current Page Info","parentId":currentPageParent, "contexts":[contexts[0]],"onclick":throwHiBriteAlert});
-var currentPageChildScamAdvisor = chrome.contextMenus.create({"title": "Is this site legit?","parentId":currentPageParent, "contexts":[contexts[0]],"onclick":checkScamAdvisorCurrent});
-
-var linkSafetyChild = chrome.contextMenus.create({"title":"Is this link safe?","parentId":linkParent,"contexts":[contexts[2]]}, function(info, tab)
-	{
-		chrome.contextMenus.onClicked.addListener(function(info, tab){
-		checkScamAdvisorLink(info, tab);
-		})					
-	}
-);
-
-function checkScamAdvisorLink(info, tab)
-{
-	alert(info.menuItemId);
-	alert("B");
-	alert(info.linkUrl);
-	var searchString = "http://www.scamadviser.com/check-website/";
-	
-	var siteToCheck = convertURLToSearchableString(info.linkUrl);
-	var finalString = searchString.concat(siteToCheck);
-	
-	alert(finalString);
-	
 }
