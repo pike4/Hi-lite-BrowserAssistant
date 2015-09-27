@@ -1,6 +1,6 @@
 function throwHiBriteAlert()
 {
-	alert("ERROR: HiBrite has crashed. Reason: is piece of shit");
+	alert("Sorry! That feature has not yet been implemented. Check back later for new updates.");
 }
 
 function openInfoPage()
@@ -15,16 +15,16 @@ function convertURLToSearchableString(URL)
 	var httpIndex = URL.indexOf("http");
 	
 	
-	if(httpIndex >=0)
+	if(httpIndex >= 0)
 	{	
 		var wwwIndex = URL.indexOf("www.");
 		var httpsIndex = URL.indexOf("https://");
-		if(wwwIndex>=0)
+		if(wwwIndex>= 0)
 		{
 			return URL.substring(URL.indexOf("www.")+4);
 		}
 		
-		else if(httpsIndex >=0)
+		else if(httpsIndex >= 0)
 		{
 			return URL.substring(URL.indexOf("https://")+8);
 		}
@@ -74,19 +74,27 @@ var selectionParent = chrome.contextMenus.create({"title": "Google this","contex
 
 var imageParent = chrome.contextMenus.create({"title": "Reverse Image Search","contexts":[contexts[3]], "onclick": searchTinEye});
 var linkParent = chrome.contextMenus.create({"title": "Linked page info","contexts":[contexts[2]], "onclick": throwHiBriteAlert});
-var currentPageChild1 = chrome.contextMenus.create({"title": "Current Page Info","parentId":currentPageParent, "contexts":[contexts[0]],"onclick":openInfoPage});
+var currentPageChild1 = chrome.contextMenus.create({"title": "Current Page Info","parentId":currentPageParent, "contexts":[contexts[0]],"onclick":throwHiBriteAlert});
 var currentPageChildScamAdvisor = chrome.contextMenus.create({"title": "Is this site legit?","parentId":currentPageParent, "contexts":[contexts[0]],"onclick":checkScamAdvisorCurrent});
 
-var linkSafetyChild = chrome.contextMenus.create({"title":"Is this link safe?","parentId":linkParent,"contexts":[contexts[2]], "onclick":checkScamAdvisorLink});
+var linkSafetyChild = chrome.contextMenus.create({"title":"Is this link safe?","parentId":linkParent,"contexts":[contexts[2]]}, function(info, tab)
+	{
+		chrome.contextMenus.onClicked.addListener(function(info, tab){
+		checkScamAdvisorLink(info, tab);
+		})					
+	}
+);
 
 function checkScamAdvisorLink(info, tab)
 {
-	alert(info.linkURL);
+	alert(info.menuItemId);
+	alert("B");
+	alert(info.linkUrl);
 	var searchString = "http://www.scamadviser.com/check-website/";
 	
-	//var siteToCheck = convertURLToSearchableString(info.linkURL);
-	//var finalString = searchString.concat(siteToCheck);
+	var siteToCheck = convertURLToSearchableString(info.linkUrl);
+	var finalString = searchString.concat(siteToCheck);
 	
-	
+	alert(finalString);
 	
 }
