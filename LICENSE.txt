@@ -1,0 +1,4 @@
+Hi-Brite License v0.0.1
+
+Hi-Brite Source Code may be freely viewed, distrubeted and modified provided
+that credit forthe originalworkis given.

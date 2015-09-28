@@ -85,10 +85,13 @@ var imageParent = chrome.contextMenus.create({"title": "Reverse Image Search","c
 var linkParent = chrome.contextMenus.create({"title": "Link Info","contexts":["link"]});
 
 
+//Context items for current page
+var currentPageSiteTrafficeport = chrome.contextMenus.create({"title": "View Current PAge Traffic Report","parentId": currentPageParent, "contexts":["page"],"onclick":throwHiBrightAlert});
+var currentPageChildScamAdvisorReport = chrome.contextMenus.create({"title": "Is this site legit?","parentId":currentPageParent, "contexts":["page"],"onclick":checkScamAdvisorCurrent});
+var currentPageSemRushReport = chrome.contextMenus.create({"title": "Advanced Page Info","parentId":currentPageParent, "contexts":["page"],"onclick":throwHiBriteAlert});
+var currentPageDownForEveryOneReport = chrome.contextMenus.create({"title": "Is This Page wDown?","parentId":currentPageParent, "contexts":["page"],"onclick":checkScamAdvisorCurrent});
 
-
-var currentPageChildScamAdvisor = chrome.contextMenus.create({"title": "Is this site legit?","parentId":currentPageParent, "contexts":[contexts[0]],"onclick":checkScamAdvisorCurrent});
-
+//Context Items for Images
 var reverseImageSearch = chrome.contextMenus.create({"title": "Reverse Image Search on TinEye", "parentId":imageParent, "contexts": ["image"], "onclick":searchTinEye});
 	
 	

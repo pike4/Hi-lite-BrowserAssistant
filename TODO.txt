@@ -1,0 +1,14 @@
+Features to be implemented:
+
+Video:
+Link to youtube/imbedded video downloader
+Link to mp3 converter
+Link to .gif converter
+
+Selected Text:
+Look up dictionary definition
+Look up synonyms
+Search on wikipedia and display in pop-up window
+Google search
+
+
