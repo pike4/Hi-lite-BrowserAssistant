@@ -25,6 +25,7 @@ function removeLeadingGarbageFromURL(URL)
 		else if(httpsIndex >= 0)
 		{
 			return URL.substring(URL.indexOf("https://")+8);
+			
 		}
 		
 		else
@@ -36,7 +37,7 @@ function removeLeadingGarbageFromURL(URL)
 	
 	else	
 	{	
-		alert("This URL is likely invalid");
+		alert("This URL may be invalid please contact us at splatterapplabs@gmail.com if you believe this to be in error");
 	}
 	return(URL);
 	
@@ -79,17 +80,17 @@ var title = "Hi-Brite Actions";
 var contexts = ["page","selection","link","image","video","audio"];
 
 //Parent Items
-var currentPageParent = chrome.contextMenus.create({"title": "Current Page", "contexts":["selection"]});
+var currentPageParent = chrome.contextMenus.create({"title": "Current Page Info", "contexts":["page"]});
 var selectionParent = chrome.contextMenus.create({"title": "Google this","contexts":["selection"]});
 var imageParent = chrome.contextMenus.create({"title": "Reverse Image Search","contexts":["image"]});
 var linkParent = chrome.contextMenus.create({"title": "Link Info","contexts":["link"]});
 
 
 //Context items for current page
-var currentPageSiteTrafficeport = chrome.contextMenus.create({"title": "View Current PAge Traffic Report","parentId": currentPageParent, "contexts":["page"],"onclick":throwHiBrightAlert});
-var currentPageChildScamAdvisorReport = chrome.contextMenus.create({"title": "Is this site legit?","parentId":currentPageParent, "contexts":["page"],"onclick":checkScamAdvisorCurrent});
-var currentPageSemRushReport = chrome.contextMenus.create({"title": "Advanced Page Info","parentId":currentPageParent, "contexts":["page"],"onclick":throwHiBriteAlert});
-var currentPageDownForEveryOneReport = chrome.contextMenus.create({"title": "Is This Page wDown?","parentId":currentPageParent, "contexts":["page"],"onclick":checkScamAdvisorCurrent});
+var currentPageSiteTrafficeport = chrome.contextMenus.create({"title": "View Current Page Traffic Report","parentId": currentPageParent, "contexts":["page"],"onclick":checkCompeteCurrent});
+var currentPageScamAdvisorReport = chrome.contextMenus.create({"title": "Is this site legit?","parentId":currentPageParent, "contexts":["page"],"onclick":checkScamAdvisorCurrent});
+var currentPageSemRushReport = chrome.contextMenus.create({"title": "Advanced Page Info","parentId":currentPageParent, "contexts":["page"],"onclick":checkSemRushCurrent});
+var currentPageDownForEveryOneReport = chrome.contextMenus.create({"title": "Is This Page Down?","parentId":currentPageParent, "contexts":["page"],"onclick":checkDownForEveryoneCurrent});
 
 //Context Items for Images
 var reverseImageSearch = chrome.contextMenus.create({"title": "Reverse Image Search on TinEye", "parentId":imageParent, "contexts": ["image"], "onclick":searchTinEye});
@@ -109,6 +110,7 @@ function checkSemRushLink(info, tab)
 	chrome.tabs.create({"url":searchString, "active": true});
 }
 
+//Opens a Compete.com link with traffic info on the selected link
 function checkCompeteLink(info, tab)
 {
 	var baseSiteURL = "https://siteanalytics.compete.com/";
@@ -117,6 +119,7 @@ function checkCompeteLink(info, tab)
 	chrome.tabs.create({"url":searchString, "active": true});
 }
 
+//Opens a ScamAdvisor Link with safety info on the current page
 function checkScamAdvisorLink(info, tab)
 {
 	var baseSiteURL = "http://www.scamadviser.com/check-website/";
@@ -125,6 +128,8 @@ function checkScamAdvisorLink(info, tab)
 	
 	chrome.tabs.create({"url":searchString, "active": true});
 }
+
+//Opens a DownForEveryoneLink to check if the site represented by the selected link is down.
 function checkDownForEveryOneLink(info, tab)
 {
 	var baseSiteURL = "http://downforeveryoneorjustme.com/";
@@ -133,18 +138,59 @@ function checkDownForEveryOneLink(info, tab)
 	
 	chrome.tabs.create({"url": searchString, "active": true});
 }
-function checkScamAdvisorCurrent()
+
+function checkScamAdvisorCurrent()	
 {
-	var searchString = "http://www.scamadviser.com/check-website/";
-	
+	var baseSiteURL = "http://www.scamadviser.com/check-website/";
 	chrome.tabs.query({'active': true}, function(tabs) {
 	var currentURL=tabs[0].url;
 	
 	var siteToCheck = removeLeadingGarbageFromURL(currentURL);
-	var finalString = searchString.concat(siteToCheck);
+	var finalString = baseSiteURL.concat(siteToCheck);
 	chrome.tabs.create({"url":finalString,"active":true});
 });
 	
+}
+
+function checkCompeteCurrent()
+{
+	
+	var baseSiteURL = "https://siteanalytics.compete.com/";
+	
+	chrome.tabs.query({'active': true}, function(tabs) {
+	var currentURL = tabs[0].url;
+	
+	var siteToCheck = removeLeadingGarbageFromURL(currentURL);
+	var finalString = baseSiteURL.concat(siteToCheck);
+	chrome.tabs.create({"url":finalString,"active":true});
+});
+}
+
+function checkDownForEveryoneCurrent()
+{
+	
+	var baseSiteURL = "http://downforeveryoneorjustme.com/";
+	
+	chrome.tabs.query({'active': true}, function(tabs) {
+	var currentURL = tabs[0].url;
+	
+	var siteToCheck = removeLeadingGarbageFromURL(currentURL);
+	var finalString = baseSiteURL.concat(siteToCheck);
+	chrome.tabs.create({"url":finalString,"active":true});
+});
+}
+
+function checkSemRushCurrent()
+{
+	var baseSiteURL = "http://www.semrush.com/info/";
+	
+	chrome.tabs.query({'active': true}, function(tabs) {
+	var currentURL = tabs[0].url;
+	
+	var siteToCheck = removeLeadingGarbageFromURL(currentURL);
+	var finalString = baseSiteURL.concat(siteToCheck);
+	chrome.tabs.create({"url":finalString,"active":true});
+});
 }
 
 function searchTinEye(info, tab)
@@ -156,3 +202,4 @@ function searchTinEye(info, tab)
 	chrome.tabs.executeScript({"file":"TinyEyeSearch.js"});
 	});
 }
+
