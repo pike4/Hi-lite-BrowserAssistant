@@ -1,3 +1,2 @@
-Hi-Brite Informational Assistant Pre-Alpha v0.0.1
-
+Hi-Brite Informational Assistant Pre-Alpha v0.0.2
 
