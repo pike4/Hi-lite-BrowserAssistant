@@ -37,7 +37,8 @@ function removeLeadingGarbageFromURL(URL)
 	
 	else	
 	{	
-		alert("This URL may be invalid please contact us at splatterapplabs@gmail.com if you believe this to be in error");
+		alert("This URL may not represent a page hosted on the internet. Please contact us at splatterapplabs@gmail.com \n if you believe this to be in error");		
+		return "i";
 	}
 	return(URL);
 	
@@ -57,8 +58,8 @@ function removeSubDirectoriesFromURL(URL)
 		var slashIndex = URL.indexOf("/", httpsIndex + 8);
 	else
 	{
-		alert("This url may be invalid. Please contact us at splatterapps@gmail.com if you belive this to be in error");
-		return null;
+		alert("This URL may not represent a page hosted on the internet. Please contact us at splatterapplabs@gmail.com \n if you believe this to be in error");
+		return "i";
 	}
 	
 	var truncatedURL = URL.substring(0, slashIndex);
@@ -68,6 +69,9 @@ function removeSubDirectoriesFromURL(URL)
 function convertFullURLToBaseSite(URL)
 {
 	var baseURL = removeSubDirectoriesFromURL(URL);
+	
+	if(baseURL == "i")
+		return "i";
 	
 	baseURL = removeLeadingGarbageFromURL(baseURL);
 	return baseURL;
@@ -138,20 +142,23 @@ function checkDownForEveryOneLink(info, tab)
 	
 	chrome.tabs.create({"url": searchString, "active": true});
 }
-
+//Opens a scam advisor link with info on the current page
 function checkScamAdvisorCurrent()	
 {
 	var baseSiteURL = "http://www.scamadviser.com/check-website/";
 	chrome.tabs.query({'active': true}, function(tabs) {
 	var currentURL=tabs[0].url;
 	
-	var siteToCheck = removeLeadingGarbageFromURL(currentURL);
+	var siteToCheck = convertFullURLToBaseSite(currentURL);
+	if(siteToCheck == "i")
+		return;
 	var finalString = baseSiteURL.concat(siteToCheck);
 	chrome.tabs.create({"url":finalString,"active":true});
 });
 	
 }
 
+//Opens a compete link with traffic info on the current page
 function checkCompeteCurrent()
 {
 	
@@ -160,26 +167,37 @@ function checkCompeteCurrent()
 	chrome.tabs.query({'active': true}, function(tabs) {
 	var currentURL = tabs[0].url;
 	
-	var siteToCheck = removeLeadingGarbageFromURL(currentURL);
+	var siteToCheck = convertFullURLToBaseSite(currentURL);
+	
+	//Return without creating a tab if convertFullURLToBaseSite indicates that the URL is invalid
+	if(siteToCheck == "i")
+		return;
+	
 	var finalString = baseSiteURL.concat(siteToCheck);
 	chrome.tabs.create({"url":finalString,"active":true});
 });
 }
 
+//Opens a down for Everyone link to see if the current page is down
 function checkDownForEveryoneCurrent()
 {
-	
 	var baseSiteURL = "http://downforeveryoneorjustme.com/";
 	
 	chrome.tabs.query({'active': true}, function(tabs) {
 	var currentURL = tabs[0].url;
 	
-	var siteToCheck = removeLeadingGarbageFromURL(currentURL);
+	var siteToCheck = convertFullURLToBaseSite(currentURL);
+	
+	//Return without creating a tab if convertFullURLToBaseSite indicates that the URL is invalid
+	if(siteToCheck == "i")
+		return;
+	
 	var finalString = baseSiteURL.concat(siteToCheck);
 	chrome.tabs.create({"url":finalString,"active":true});
 });
 }
 
+//Opens a SemRush link with advanced info on the current page
 function checkSemRushCurrent()
 {
 	var baseSiteURL = "http://www.semrush.com/info/";
@@ -187,7 +205,12 @@ function checkSemRushCurrent()
 	chrome.tabs.query({'active': true}, function(tabs) {
 	var currentURL = tabs[0].url;
 	
-	var siteToCheck = removeLeadingGarbageFromURL(currentURL);
+	var siteToCheck = convertFullURLToBaseSite(currentURL);
+	
+	//Return without creating a tab if convertFullURLToBaseSite indicates that the URL is invalid
+	if(siteToCheck == "i")
+		return;
+	
 	var finalString = baseSiteURL.concat(siteToCheck);
 	chrome.tabs.create({"url":finalString,"active":true});
 });
