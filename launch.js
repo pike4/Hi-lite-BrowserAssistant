@@ -1,14 +1,16 @@
+//Placeholder method for context items.
 function throwHiBriteAlert()
 {
 	alert("Sorry! That feature has not yet been implemented. Check back later for new updates.");
 }
 
-function openInfoPage()
+/* Simple test function. Opens a new google.com tab. Will be removed in a later update. */
+function openNewTabGoogle()
 {
 	chrome.tabs.create({"url":"http://www.google.com","active":true});
 }
 
-
+/* Parses the given URL and removes anything in front of the site name (http://, www.) so that it can be passed to searched by the web service. */
 function removeLeadingGarbageFromURL(URL)
 {	
 	var httpIndex = URL.indexOf("http");
@@ -37,13 +39,23 @@ function removeLeadingGarbageFromURL(URL)
 	
 	else	
 	{	
-		alert("This URL may not represent a page hosted on the internet. Please contact us at splatterapplabs@gmail.com \n if you believe this to be in error");		
 		return "i";
 	}
 	return(URL);
 	
 }
 
+//Alerts the user that the URL is invalid and returns i so that the parent function can be exited
+function checkIfValidURL(URL)
+{
+	if(URL == "i")
+	{
+		alert("This URL may not represent a page hosted on the internet. Please contact us at splatterapplabs@gmail.com \n if you believe this to be in error. This action will not work for pages such as your history or extensions pages.");
+		return "i";
+	}
+}
+
+/* Parses the given URL and removes any lower level pages so that only the main site is returned */
 function removeSubDirectoriesFromURL(URL)
 {
 	var wwwIndex = URL.indexOf("www.");
@@ -58,7 +70,6 @@ function removeSubDirectoriesFromURL(URL)
 		var slashIndex = URL.indexOf("/", httpsIndex + 8);
 	else
 	{
-		alert("This URL may not represent a page hosted on the internet. Please contact us at splatterapplabs@gmail.com \n if you believe this to be in error");
 		return "i";
 	}
 	
@@ -66,6 +77,7 @@ function removeSubDirectoriesFromURL(URL)
 	return truncatedURL;
 }
 
+/* Combines the leading garbege and subdirectory functions to allow the specified web service to perorm a search. */
 function convertFullURLToBaseSite(URL)
 {
 	var baseURL = removeSubDirectoriesFromURL(URL);
@@ -78,10 +90,12 @@ function convertFullURLToBaseSite(URL)
 }
 
 
-
+var passingString = "";
 
 var title = "Hi-Brite Actions";
 var contexts = ["page","selection","link","image","video","audio"];
+
+var clipConverterCurrent = 'a';
 
 //Parent Items
 var currentPageParent = chrome.contextMenus.create({"title": "Current Page Info", "contexts":["page"]});
@@ -101,11 +115,36 @@ var reverseImageSearch = chrome.contextMenus.create({"title": "Reverse Image Sea
 	
 	
 //Context items for links
-var siteTrafficReport = chrome.contextMenus.create({"title": "View Site Traffic", "parentId": linkParent, "contexts":["link"], "onclick": checkCompeteLink});
 var scamAdvisorReport = chrome.contextMenus.create({"title":"Is this link safe?","parentId":linkParent,"contexts":["link"], "onclick": checkScamAdvisorLink});
 var downForEveryoneReport = chrome.contextMenus.create({"title":"Is This Site Down?", "parentId":linkParent,"contexts":["link"],"onclick":checkDownForEveryOneLink});
+var siteTrafficReport = chrome.contextMenus.create({"title": "View Site Traffic", "parentId": linkParent, "contexts":["link"], "onclick": checkCompeteLink});
 var semRushReport = chrome.contextMenus.create({"title": "Advanced Info", "parentId":linkParent,"contexts":["link"],"onclick":checkSemRushLink});
 
+//TODO: Context Items for videos
+//TODO: Clipconverter link
+
+/*Creates a video download context item if the current page is youtube*/
+chrome.tabs.query({'active': true}, function(tabs)
+{
+	var currentURL = tabs[0].url;
+
+	if(convertFullURLToBaseSite(currentURL) == "youtube.com" && currentURL.indexOf("watch") > -1 )
+	{
+		clipConverterCurrent = chrome.contextMenus.create({"title":"Download this video", "contexts":["page"],"onclick":downloadYoutubeVideoCurrent});
+	}
+});
+
+//TODO: Convert current youtube video to MP3
+
+chrome.tabs.onActivated.addListener(addOrRemoveRelevantItems);
+chrome.tabs.onUpdated.addListener(addOrRemoveRelevantItems);
+
+//TODO: Context Items for selections
+//Search for the selected text
+//Add contact
+//
+
+/* Opens a SemRush link with advanced info on the selected link */
 function checkSemRushLink(info, tab)
 {
 	var baseSiteURL = "http://www.semrush.com/info/";
@@ -114,7 +153,7 @@ function checkSemRushLink(info, tab)
 	chrome.tabs.create({"url":searchString, "active": true});
 }
 
-//Opens a Compete.com link with traffic info on the selected link
+/*Opens a Compete.com link with traffic info on the selected link */
 function checkCompeteLink(info, tab)
 {
 	var baseSiteURL = "https://siteanalytics.compete.com/";
@@ -123,7 +162,7 @@ function checkCompeteLink(info, tab)
 	chrome.tabs.create({"url":searchString, "active": true});
 }
 
-//Opens a ScamAdvisor Link with safety info on the current page
+/*Opens a ScamAdvisor Link with safety info on the current page */
 function checkScamAdvisorLink(info, tab)
 {
 	var baseSiteURL = "http://www.scamadviser.com/check-website/";
@@ -133,7 +172,7 @@ function checkScamAdvisorLink(info, tab)
 	chrome.tabs.create({"url":searchString, "active": true});
 }
 
-//Opens a DownForEveryoneLink to check if the site represented by the selected link is down.
+/*Opens a DownForEveryoneLink to check if the site represented by the selected link is down */
 function checkDownForEveryOneLink(info, tab)
 {
 	var baseSiteURL = "http://downforeveryoneorjustme.com/";
@@ -142,7 +181,8 @@ function checkDownForEveryOneLink(info, tab)
 	
 	chrome.tabs.create({"url": searchString, "active": true});
 }
-//Opens a scam advisor link with info on the current page
+
+/*Opens a scam advisor link with info on the current page */
 function checkScamAdvisorCurrent()	
 {
 	var baseSiteURL = "http://www.scamadviser.com/check-website/";
@@ -150,15 +190,18 @@ function checkScamAdvisorCurrent()
 	var currentURL=tabs[0].url;
 	
 	var siteToCheck = convertFullURLToBaseSite(currentURL);
-	if(siteToCheck == "i")
+	//Return without creating a tab if convertFullURLToBaseSite indicates that the URL is invalid
+	if(checkIfValidURL(siteToCheck) == "i")
+	{
 		return;
+	}
 	var finalString = baseSiteURL.concat(siteToCheck);
 	chrome.tabs.create({"url":finalString,"active":true});
 });
 	
 }
 
-//Opens a compete link with traffic info on the current page
+/*Opens a compete link with traffic info on the current page */
 function checkCompeteCurrent()
 {
 	
@@ -170,15 +213,17 @@ function checkCompeteCurrent()
 	var siteToCheck = convertFullURLToBaseSite(currentURL);
 	
 	//Return without creating a tab if convertFullURLToBaseSite indicates that the URL is invalid
-	if(siteToCheck == "i")
+	if(checkIfValidURL(siteToCheck) == "i")
+	{
 		return;
+	}
 	
 	var finalString = baseSiteURL.concat(siteToCheck);
 	chrome.tabs.create({"url":finalString,"active":true});
 });
 }
 
-//Opens a down for Everyone link to see if the current page is down
+/*Opens a down for Everyone link to see if the current page is down */
 function checkDownForEveryoneCurrent()
 {
 	var baseSiteURL = "http://downforeveryoneorjustme.com/";
@@ -188,16 +233,22 @@ function checkDownForEveryoneCurrent()
 	
 	var siteToCheck = convertFullURLToBaseSite(currentURL);
 	
+	
 	//Return without creating a tab if convertFullURLToBaseSite indicates that the URL is invalid
-	if(siteToCheck == "i")
+	if(checkIfValidURL(siteToCheck) == "i")
+	{
 		return;
+	}
+	
+	
+	
 	
 	var finalString = baseSiteURL.concat(siteToCheck);
 	chrome.tabs.create({"url":finalString,"active":true});
 });
 }
 
-//Opens a SemRush link with advanced info on the current page
+/*Opens a SemRush link with advanced info on the current page */
 function checkSemRushCurrent()
 {
 	var baseSiteURL = "http://www.semrush.com/info/";
@@ -208,21 +259,72 @@ function checkSemRushCurrent()
 	var siteToCheck = convertFullURLToBaseSite(currentURL);
 	
 	//Return without creating a tab if convertFullURLToBaseSite indicates that the URL is invalid
-	if(siteToCheck == "i")
+	if(checkIfValidURL(siteToCheck) == "i")
+	{
 		return;
+	}
 	
 	var finalString = baseSiteURL.concat(siteToCheck);
 	chrome.tabs.create({"url":finalString,"active":true});
 });
 }
 
+/* Performs a reverse image search on TinEye for the selected image. Work in progress */
 function searchTinEye(info, tab)
 {
 	alert("A");
-	var linkToSend = info.srcUrl;
-	alert(linkToSend);
+	passingString = info.srcUrl;
+	alert(passingString);
 	chrome.tabs.create({"url":"https://www.tineye.com/","active":true}, function(tabs){
 	chrome.tabs.executeScript({"file":"TinyEyeSearch.js"});
 	});
 }
 
+/*Checks if the current page is youtube and updates the relevant context item accordingly */
+function addOrRemoveRelevantItems()
+{		
+		chrome.tabs.query({'active': true}, function(tabs)
+		{
+			var currentURL = tabs[0].url;
+			
+			if(convertFullURLToBaseSite(currentURL).indexOf("youtube") > -1 && currentURL.indexOf("watch") > -1 && clipConverterCurrent == 'a')
+			{
+				clipConverterCurrent = chrome.contextMenus.create({"title":"Download this video", "contexts":["page"],"onclick":downloadYoutubeVideoCurrent});
+			}
+			
+			else if(!(convertFullURLToBaseSite(currentURL).indexOf("youtube.com") > -1) || !(currentURL.indexOf("watch") > -1))
+			{
+				chrome.contextMenus.remove(clipConverterCurrent);
+				clipConverterCurrent = 'a';
+			}
+				
+			
+		});
+		
+		
+
+}
+ 
+/*Downloads the youtube video on the current page TODO: savefrom.net */
+function downloadYoutubeVideoCurrent()
+{
+	var baseSiteURL = "http://www.ss"
+	
+	chrome.tabs.query({'active': true}, function(tabs) {
+	var currentURL = tabs[0].url;
+	
+	var finalString = baseSiteURL + removeLeadingGarbageFromURL(currentURL);
+	alert(finalString);
+	//Return without creating a tab if convertFullURLToBaseSite indicates that the URL is invalid
+	
+	alert("still running");
+	
+	chrome.tabs.create({"url":finalString,"active":true});
+});
+}
+
+function convertYoutubeVideoToMP3Current()
+{
+	
+	
+}

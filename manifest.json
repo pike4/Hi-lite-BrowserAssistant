@@ -4,7 +4,7 @@
 	"name":"Hi-Brite Informational Assistant",
 	"description": "This extension provides extended information and performs various helpful actions based on highlighted text. Just kidding, it does nothing",
 	
-	"version": "0.0.0",
+	"version": "0.1.0",
 	
 	"icons": 
 	{
