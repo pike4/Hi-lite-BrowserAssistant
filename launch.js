@@ -90,17 +90,34 @@ function convertFullURLToBaseSite(URL)
 }
 
 
-var passingString = "";
+//alert("AA");
+
+var youtubeSearchString;
+var tinEyeSearchString;
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
+{
+	if(request.greeting == "Request youtube URL")
+	{
+		sendResponse({"URL":youtubeSearchString});
+	}
+	
+	else if(request.greeting == "Request image URL")
+	{
+		sendResponse({"URL":tinEyeSearchString});
+	}
+});
 
 var title = "Hi-Brite Actions";
 var contexts = ["page","selection","link","image","video","audio"];
 
 var clipConverterCurrent = 'a';
+var toMP3Current = 'a';
 
 //Parent Items
 var currentPageParent = chrome.contextMenus.create({"title": "Current Page Info", "contexts":["page"]});
 var selectionParent = chrome.contextMenus.create({"title": "Google this","contexts":["selection"]});
-var imageParent = chrome.contextMenus.create({"title": "Reverse Image Search","contexts":["image"]});
+//var imageParent = chrome.contextMenus.create({"title": "Reverse Image Search","contexts":["image"]});
 var linkParent = chrome.contextMenus.create({"title": "Link Info","contexts":["link"]});
 
 
@@ -111,7 +128,7 @@ var currentPageSemRushReport = chrome.contextMenus.create({"title": "Advanced Pa
 var currentPageDownForEveryOneReport = chrome.contextMenus.create({"title": "Is This Page Down?","parentId":currentPageParent, "contexts":["page"],"onclick":checkDownForEveryoneCurrent});
 
 //Context Items for Images
-var reverseImageSearch = chrome.contextMenus.create({"title": "Reverse Image Search on TinEye", "parentId":imageParent, "contexts": ["image"], "onclick":searchTinEye});
+var reverseImageSearch = chrome.contextMenus.create({"title": "Reverse Image Search on TinEye", "contexts": ["image"], "onclick":searchTinEye});
 	
 	
 //Context items for links
@@ -131,6 +148,7 @@ chrome.tabs.query({'active': true}, function(tabs)
 	if(convertFullURLToBaseSite(currentURL) == "youtube.com" && currentURL.indexOf("watch") > -1 )
 	{
 		clipConverterCurrent = chrome.contextMenus.create({"title":"Download this video", "contexts":["page"],"onclick":downloadYoutubeVideoCurrent});
+		toMP3Current = chrome.contextMenus.create({"title":"Convert this video to MP3", "contexts":["page"],"onclick":convertYoutubeVideoToMP3Current});
 	}
 });
 
@@ -272,11 +290,20 @@ function checkSemRushCurrent()
 /* Performs a reverse image search on TinEye for the selected image. Work in progress */
 function searchTinEye(info, tab)
 {
-	alert("A");
-	passingString = info.srcUrl;
-	alert(passingString);
-	chrome.tabs.create({"url":"https://www.tineye.com/","active":true}, function(tabs){
-	chrome.tabs.executeScript({"file":"TinyEyeSearch.js"});
+	//alert("A");
+	tinEyeSearchString = info.srcUrl;
+	/*chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
+	{
+		sendResponse({"URL":tinEyeSearchString});
+	});*/
+	
+	chrome.tabs.create({"url":"https://www.tineye.com/","active":true}, function(tabs)
+	{
+		chrome.tabs.query({active: true, currentWindow: true}, function(tabs)
+		{
+			chrome.tabs.executeScript({"file":"TinEyeSearch.js"});
+		});
+		
 	});
 }
 
@@ -287,25 +314,31 @@ function addOrRemoveRelevantItems()
 		{
 			var currentURL = tabs[0].url;
 			
-			if(convertFullURLToBaseSite(currentURL).indexOf("youtube") > -1 && currentURL.indexOf("watch") > -1 && clipConverterCurrent == 'a')
+			var isYoutube = (convertFullURLToBaseSite(currentURL).indexOf("youtube") > -1 && currentURL.indexOf("watch") > -1);
+			
+			if(isYoutube && clipConverterCurrent == 'a')
 			{
 				clipConverterCurrent = chrome.contextMenus.create({"title":"Download this video", "contexts":["page"],"onclick":downloadYoutubeVideoCurrent});
 			}
 			
-			else if(!(convertFullURLToBaseSite(currentURL).indexOf("youtube.com") > -1) || !(currentURL.indexOf("watch") > -1))
+			if(isYoutube && toMP3Current == 'a')
+			{
+				toMP3Current = chrome.contextMenus.create({"title":"Convert this video to MP3", "contexts":["page"],"onclick":convertYoutubeVideoToMP3Current});
+			}
+			
+			if(!(convertFullURLToBaseSite(currentURL).indexOf("youtube.com") > -1) || !(currentURL.indexOf("watch") > -1))
 			{
 				chrome.contextMenus.remove(clipConverterCurrent);
+				chrome.contextMenus.remove(toMP3Current);
 				clipConverterCurrent = 'a';
+				toMP3Current = 'a';
 			}
 				
 			
 		});
-		
-		
-
 }
  
-/*Downloads the youtube video on the current page TODO: savefrom.net */
+/*Downloads the youtube video on the current page */
 function downloadYoutubeVideoCurrent()
 {
 	var baseSiteURL = "http://www.ss"
@@ -314,7 +347,7 @@ function downloadYoutubeVideoCurrent()
 	var currentURL = tabs[0].url;
 	
 	var finalString = baseSiteURL + removeLeadingGarbageFromURL(currentURL);
-	alert(finalString);
+
 	//Return without creating a tab if convertFullURLToBaseSite indicates that the URL is invalid
 	
 	alert("still running");
@@ -323,8 +356,27 @@ function downloadYoutubeVideoCurrent()
 });
 }
 
+/* Opens a youtube to MP3 link TODO: get the form to submit */
 function convertYoutubeVideoToMP3Current()
 {
-	
-	
+	chrome.tabs.query({'active':true}, function(tabs)
+	{
+		youtubeSearchString = tabs[0].url;
+		
+		
+		/*chrome.runtime.onMessage.addListener(function(request, sender, sendResponse)
+		{
+			alert(request.greeting);
+			sendResponse({"URL":youtubeSearchString});
+		});*/
+		
+		chrome.tabs.create({"url":"http://www.youtube-mp3.org/","active":true}, function(tabs)
+		{
+			chrome.tabs.query({active: true, currentWindow: true}, function(tabs)
+			{
+				chrome.tabs.executeScript({"file":"YoutubeToMp3Submit.js"});
+			});
+			
+		});
+	});
 }
